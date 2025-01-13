@@ -363,6 +363,18 @@ This hook is run with the name of the file as argument.  A good
 way to use this is to tell a desktop calendar application to
 re-read the iCalendar file.")
 
+(defun org-icalendar-todo-title-generator--just-entry (todo-type headline)
+  "Default value for org-icalendar-todo-title-generator.
+This function ignores the TODO-TYPE of a todo item that is about
+to be converted to a VTODO item and just uses the entry HEADLINE."
+  headline)
+
+(defcustom org-icalendar-todo-title-generator 'org-icalendar-todo-title-generator--just-entry
+  "Function for generating the name of VTODO items from org todo item.
+The function is passed two strings as arguments, the todo type
+and the entry's headline.  The function should return a string."
+  :group 'org-export-icalendar
+  :type '(function))
 
 
 ;;; Define Backend
@@ -768,7 +780,8 @@ inlinetask within the section."
 		       (`t (eq todo-type 'todo))
                        ((and (pred listp) kwd-list)
                         (member (org-element-property :todo-keyword entry) kwd-list))))
-	    (org-icalendar--vtodo entry uid summary loc desc cat tz class))
+            (let ((vtodo-title (funcall org-icalendar-todo-title-generator todo-type entry)))
+              (org-icalendar--vtodo vtodo-title uid summary loc desc cat tz class)))
 	  ;; Diary-sexp: Collect every diary-sexp element within ENTRY
 	  ;; and its title, and transcode them.  If ENTRY is
 	  ;; a headline, skip inlinetasks: they will be handled
